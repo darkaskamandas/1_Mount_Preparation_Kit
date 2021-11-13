@@ -1,0 +1,95 @@
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.Collections;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
+using System.Text;
+using System;
+
+class Result
+{
+
+    /*
+     * Complete the 'arrayManipulation' function below.
+     *
+     * The function is expected to return a LONG_INTEGER.
+     * The function accepts following parameters:
+     *  1. INTEGER n
+     *  2. 2D_INTEGER_ARRAY queries
+     */
+
+    public static long arrayManipulation(int n, List<List<int>> queries)
+    {
+        var steps = new Step[queries.Count * 2];
+        for (int i = 0, j = 0; i < queries.Count; i++)
+        {
+            var q = queries[i];
+            steps[j++] = new Step(q[0]-1, q[2]);
+            steps[j++] = new Step(q[1], -q[2]);
+        }
+        Array.Sort(steps);
+
+        long max = 0;
+        long v = 0;
+        for (int i = 0; i < steps.Length;)
+        {
+            var s = steps[i].V;
+            v += steps[i].K;
+            while (++i < steps.Length && steps[i].V == s) v += steps[i].K;
+            max = Math.Max(max, v);
+        }
+        return max;
+    }
+
+    struct Step : IComparable<Step>
+    {
+        public int V;
+        public int K;
+
+        public Step(int v, int k)
+        {
+            V = v;
+            K = k;
+        }
+
+        public int CompareTo(Step other)
+        {
+            return V.CompareTo(other.V);
+        }
+    }
+
+}
+
+class Solution
+{
+    public static void Main(string[] args)
+    {
+        TextWriter textWriter = new StreamWriter(@System.Environment.GetEnvironmentVariable("OUTPUT_PATH"), true);
+
+        string[] firstMultipleInput = Console.ReadLine().TrimEnd().Split(' ');
+
+        int n = Convert.ToInt32(firstMultipleInput[0]);
+
+        int m = Convert.ToInt32(firstMultipleInput[1]);
+
+        List<List<int>> queries = new List<List<int>>();
+
+        for (int i = 0; i < m; i++)
+        {
+            queries.Add(Console.ReadLine().TrimEnd().Split(' ').ToList().Select(queriesTemp => Convert.ToInt32(queriesTemp)).ToList());
+        }
+
+        long result = Result.arrayManipulation(n, queries);
+
+        textWriter.WriteLine(result);
+
+        textWriter.Flush();
+        textWriter.Close();
+    }
+}
