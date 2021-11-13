@@ -1,0 +1,199 @@
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.Collections;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
+using System.Text;
+using System;
+
+class Result
+{
+
+    /*
+     * Complete the 'solve' function below.
+     *
+     * The function is expected to return an INTEGER_ARRAY.
+     * The function accepts following parameters:
+     *  1. INTEGER_ARRAY arr
+     *  2. INTEGER_ARRAY queries
+     */
+
+    public static List<int> solve(List<int> arr, List<int> queries)
+    {
+        var original = new List<int>(queries);
+        queries = new List<int>(new HashSet<int>(queries));
+        queries.Sort();
+        var newPos = new Dictionary<int, int>();
+        for (int j = 0; j < queries.Count; j++)
+        {
+            newPos.Add(queries[j], j);
+        }
+
+        var mins = new int[queries.Count];
+        var scanners = new Scanner[queries.Count];
+        var totalLen = 0;
+        for (int j = 0; j < scanners.Length; j++)
+        {
+            scanners[j] = new Scanner(queries[j] - totalLen);
+            totalLen = queries[j];
+            mins[j] = int.MaxValue;
+        }
+
+        foreach (var scanner in scanners)
+        {
+            scanner.Add(int.MinValue);
+        }
+
+        int p = 0;
+        for (int j = 0; j < queries.Count; j++)
+        {
+            var lim = queries[j] - 1;
+            var scanner = scanners[j];
+            for (; p < lim; p++)
+            {
+                scanner.Add(arr[p]);
+            }
+            p++;
+        }
+        foreach (var scanner in scanners)
+        {
+            scanner.SetLevels();
+        }
+
+        int limScan = queries.Count;
+        int i = 0;
+        while (true)
+        {
+            var nowMax = int.MinValue;
+            int prevPos = i;
+            for (int s = 0; s < limScan; s++)
+            {
+                var scanner = scanners[s];
+                var pos = i + queries[s];
+                scanner.Substitute(arr[pos - 1]);
+                nowMax = Math.Max(nowMax, scanner.Max);
+                mins[s] = Math.Min(mins[s], nowMax);
+                prevPos = pos;
+            }
+            while (prevPos >= arr.Count)
+            {
+                limScan--;
+                if (limScan <= 0) goto DoubleBreak;
+                prevPos = i + queries[limScan - 1];
+            }
+            i++;
+        }
+        DoubleBreak:
+
+        var final = new List<int>(original.Count);
+        for (int j = 0; j < original.Count; j++)
+        {
+            final.Add(mins[newPos[original[j]]]);
+        }
+        return final;
+    }
+
+    class Scanner
+    {
+        List<int[]> arrs;
+        int[] level0;
+        int[] levelTop;
+        int len;
+        int Pos = 0;
+
+        public Scanner(int Length)
+        {
+            len = Length;
+            arrs = new List<int[]>();
+            while (true)
+            {
+                arrs.Add(new int[Length]);
+                if (Length == 1) break;
+                Length = (Length + 1) >> 1;
+            }
+            level0 = arrs[0];
+            levelTop = arrs[arrs.Count - 1];
+        }
+
+        public int Max
+        {
+            get { return levelTop[0]; }
+        }
+        public void Add(int v)
+        {
+            level0[Pos++] = v;
+        }
+        public void SetLevels()
+        {
+            Pos = 0;
+            for (int l = 1; l < arrs.Count; l++)
+            {
+                var levelHi = arrs[l];
+                var levelLo = arrs[l - 1];
+                var i2b = levelLo.Length - 1;
+                for (int i = levelHi.Length - 1; i >= 0; i--)
+                {
+                    var i2a = i * 2;
+                    levelHi[i] = Math.Max(levelLo[i2a], levelLo[i2b]);
+                    i2b = i2a - 1;
+                }
+            }
+        }
+        public void Substitute(int v)
+        {
+            var pos = Pos++;
+            if (Pos >= len) Pos = 0;
+            var levelLo = level0;
+            levelLo[pos] = v;
+            var lev = 1;
+            while (lev < arrs.Count)
+            {
+                var levelHi = arrs[lev];
+                if ((pos ^ 1) < levelLo.Length) v = Math.Max(v, levelLo[pos ^ 1]);
+                pos >>= 1;
+                if (levelHi[pos] == v) break;
+                levelHi[pos] = v;
+                lev++;
+                levelLo = levelHi;
+            }
+        }
+    }
+
+}
+
+class Solution
+{
+    public static void Main(string[] args)
+    {
+        TextWriter textWriter = new StreamWriter(@System.Environment.GetEnvironmentVariable("OUTPUT_PATH"), true);
+
+        string[] firstMultipleInput = Console.ReadLine().TrimEnd().Split(' ');
+
+        int n = Convert.ToInt32(firstMultipleInput[0]);
+
+        int q = Convert.ToInt32(firstMultipleInput[1]);
+
+        List<int> arr = Console.ReadLine().TrimEnd().Split(' ').ToList().Select(arrTemp => Convert.ToInt32(arrTemp)).ToList();
+
+        List<int> queries = new List<int>();
+
+        for (int i = 0; i < q; i++)
+        {
+            int queriesItem = Convert.ToInt32(Console.ReadLine().Trim());
+            queries.Add(queriesItem);
+        }
+
+        List<int> result = Result.solve(arr, queries);
+
+        textWriter.WriteLine(String.Join("\n", result));
+
+        textWriter.Flush();
+        textWriter.Close();
+    }
+}
