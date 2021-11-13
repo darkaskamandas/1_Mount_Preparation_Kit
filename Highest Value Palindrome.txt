@@ -1,0 +1,121 @@
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.Collections;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
+using System.Text;
+using System;
+
+class Result
+{
+
+    /*
+     * Complete the 'highestValuePalindrome' function below.
+     *
+     * The function is expected to return a STRING.
+     * The function accepts following parameters:
+     *  1. STRING s
+     *  2. INTEGER n
+     *  3. INTEGER k
+     */
+
+    public static string highestValuePalindrome(string s, int n, int k)
+    {
+        var chars = new char[s.Length];
+        s.CopyTo(0, chars, 0, s.Length);
+
+        var mid = (n - 1) / 2;
+        
+        int midi = mid;
+        int midj;
+        if ((n & 1) == 0) midj = mid + 1;
+        else midj = mid;
+
+        var must = new int[mid + 2];
+        int mustN = 0;
+        for (int i = midi, j = midj; i >= 0; i--, j++)
+        {
+            if (s[i] != s[j]) mustN++;
+            must[i] = mustN;
+        }
+        if (mustN > k) return "-1";
+
+        var nines = new int[mid + 1];
+        var ninesN = 0;
+        for (int i = 0, j = n - 1; i < j; i++, j--)
+        {
+            if (s[i] != '9') ninesN++;
+            if (s[j] != '9') ninesN++;
+            nines[i] = ninesN;
+        }
+        if (midi == midj && s[midi] != '9')
+        {
+            ninesN++;
+            nines[midi] = ninesN;
+        }
+
+        int split = 0;
+        int moves = 0;
+        for (int i = 1; i < must.Length; i++)
+        {
+            if (nines[i - 1] + must[i] > k) break;
+            moves = nines[i - 1] + must[i];
+            split++;
+        }
+
+        int p = 0;
+        int r = s.Length - 1;
+        for (; p < split; p++, r--)
+        {
+            if (s[p] != '9') chars[p] = '9';
+            if (s[r] != '9') chars[r] = '9';
+        }
+        for (; p < r; p++, r--)
+        {
+            var a = s[p];
+            var b = s[r];
+            if (a != b)
+            {
+                if (a > b) chars[r] = a;
+                else chars[p] = b;
+            }
+        }
+
+        if (k - moves == 1 && (n & 1) == 1)
+        {
+            chars[mid] = '9';
+        }
+
+        return new String(chars);
+    }
+
+}
+
+class Solution
+{
+    public static void Main(string[] args)
+    {
+        TextWriter textWriter = new StreamWriter(@System.Environment.GetEnvironmentVariable("OUTPUT_PATH"), true);
+
+        string[] firstMultipleInput = Console.ReadLine().TrimEnd().Split(' ');
+
+        int n = Convert.ToInt32(firstMultipleInput[0]);
+
+        int k = Convert.ToInt32(firstMultipleInput[1]);
+
+        string s = Console.ReadLine();
+
+        string result = Result.highestValuePalindrome(s, n, k);
+
+        textWriter.WriteLine(result);
+
+        textWriter.Flush();
+        textWriter.Close();
+    }
+}
