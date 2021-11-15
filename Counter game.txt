@@ -1,0 +1,80 @@
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.Collections;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
+using System.Text;
+using System;
+
+class Result
+{
+
+    /*
+     * Complete the 'counterGame' function below.
+     *
+     * The function is expected to return a STRING.
+     * The function accepts LONG_INTEGER n as parameter.
+     */
+
+    public static string counterGame(long n)
+    {
+        if (n == 1){
+            return "Richard";
+        }
+        
+        Dictionary<long, int> powers = new Dictionary<long, int>();
+        for (int i = 1; i < 64; i++){            
+                powers.Add((long)Math.Pow(2, i), i);
+            
+        }
+        
+        //Console.WriteLine($"Input: {n}");
+        
+        int counter = 1;
+        while (n > 1){
+            if (powers.ContainsKey(n)){
+                n = n / 2;
+            }
+            else{
+                n = n - GetNextLowest(powers, n);
+                //Console.WriteLine($"Next Lowest: {n}");                
+            }
+            
+            counter++;
+        }
+        
+        return counter % 2 == 0 ? "Louise" : "Richard";
+    }
+    
+    private static long GetNextLowest(Dictionary<long, int> powers, long n){
+        return powers.Keys.Where(k => k < n).Max();        
+    }
+}
+
+class Solution
+{
+    public static void Main(string[] args)
+    {
+        TextWriter textWriter = new StreamWriter(@System.Environment.GetEnvironmentVariable("OUTPUT_PATH"), true);
+
+        int t = Convert.ToInt32(Console.ReadLine().Trim());
+
+        for (int tItr = 0; tItr < t; tItr++)
+        {
+            long n = Convert.ToInt64(Console.ReadLine().Trim());
+
+            string result = Result.counterGame(n);
+
+            textWriter.WriteLine(result);
+        }
+
+        textWriter.Flush();
+        textWriter.Close();
+    }
+}
