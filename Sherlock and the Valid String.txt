@@ -1,0 +1,82 @@
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.Collections;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
+using System.Text;
+using System;
+
+class Result
+{
+
+    /*
+     * Complete the 'isValid' function below.
+     *
+     * The function is expected to return a STRING.
+     * The function accepts STRING s as parameter.
+     */
+
+    public static string isValid(string s)
+    {
+        int n = s.Length;
+        Dictionary<char, int> occurrences = new Dictionary<char, int>();
+        for (int i = 0; i < n; i++){
+            if (occurrences.ContainsKey(s[i])){
+                occurrences[s[i]]++;
+            }
+            else{
+                occurrences.Add(s[i], 1);
+            }
+        }
+        
+        Dictionary<int, int> oo = new Dictionary<int, int>();
+        
+        foreach (char key in occurrences.Keys){
+            if (oo.ContainsKey(occurrences[key])){
+                oo[occurrences[key]]++;
+            }
+            else{
+                oo.Add(occurrences[key], 1);
+            }
+        }
+        
+        if (oo.Keys.Count > 2){
+            return "NO";
+        }                       
+        else{
+            if (oo.Keys.Count == 1){
+                return "YES";
+            }
+            else{
+                if (oo.Values.Contains(1) && ((oo[oo.Keys.Min()] == 1) || oo.Keys.Max() - oo.Keys.Min() == 1)){
+                    return "YES";
+                }
+            }
+        }                                 
+        return "NO";
+    }
+
+}
+
+class Solution
+{
+    public static void Main(string[] args)
+    {
+        TextWriter textWriter = new StreamWriter(@System.Environment.GetEnvironmentVariable("OUTPUT_PATH"), true);
+
+        string s = Console.ReadLine();
+
+        string result = Result.isValid(s);
+
+        textWriter.WriteLine(result);
+
+        textWriter.Flush();
+        textWriter.Close();
+    }
+}
