@@ -1,0 +1,239 @@
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.Collections;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
+using System.Text;
+using System;
+
+class Result
+{
+
+    /*
+     * Complete the 'bomberMan' function below.
+     *
+     * The function is expected to return a STRING_ARRAY.
+     * The function accepts following parameters:
+     *  1. INTEGER n
+     *  2. STRING_ARRAY grid
+     */
+
+    public static List<string> bomberMan(int n, List<string> grid)
+    {
+        if(n<2)return grid;
+        if((n&1)==0){
+            var st=new State(grid);
+            st.SetAll();
+            return st.Result();
+        }
+        
+        var prevPrev=new State(grid);
+        var prev=prevPrev.Simulate();
+        for(int t=3;t<n;t+=2)
+        {
+            var act=prev.Simulate();
+            if(act.Equal(prevPrev))
+            {
+                if((((n-t)/2)&1)!=0)return act.Result();
+                else return prev.Result();
+            }
+            prevPrev=prev;
+            prev=act;
+        }
+        return prev.Result();
+    }
+    class State
+    {
+                const ulong U1 = 1;
+                ulong[][] arr;
+                int width;
+                int last;
+                ulong topMask;
+
+                public State(List<string> grid) : this(grid[0].Length, grid.Count)
+                {
+                    for (int q = 0; q < grid.Count; q++)
+                    {
+                        for (int w = 0; w < width; w++)
+                        {
+                            if (grid[q][w] == 'O') SetCell(w, q);
+                        }
+                    }
+                }
+                public State(int wid, int hei)
+                {
+                    width = wid;
+                    arr = new ulong[hei][];
+                    var l = (wid >> 6) + 1;
+                    last = l - 1;
+                    for (int q = 0; q < hei; q++)
+                    {
+                        arr[q] = new ulong[l];
+                    }
+                    var topWid = wid & 63;
+                    for (int q = 0; q < topWid; q++)
+                    {
+                        topMask = (topMask << 1) + 1;
+                    }
+                }
+
+                public void SetCell(int x, int y)
+                {
+                    var xlo = x & 63;
+                    var xhi = x >> 6;
+                    arr[y][xhi] |= U1 << xlo;
+                }
+                public bool IsBomb(int x, int y)
+                {
+                    var xlo = x & 63;
+                    var xhi = x >> 6;
+                    return (arr[y][xhi] & U1 << xlo) != 0;
+                }
+                public void SetAll()
+                {
+                    for (int q = 0; q < arr.Length; q++)
+                    {
+                        var row = arr[q];
+                        for (int w = 0; w < row.Length; w++)
+                        {
+                            row[w] = ulong.MaxValue;
+                        }
+                        row[last] = topMask;
+                    }
+                }
+                public List<string> Result()
+                {
+                    var ret = new List<string>(arr.Length);
+                    for (int q = 0; q < arr.Length; q++)
+                    {
+                        var chr = new char[width];
+                        for (int w = 0; w < width; w++)
+                        {
+                            if (IsBomb(w, q)) chr[w] = 'O';
+                            else chr[w] = '.';
+                        }
+                        ret.Add(new String(chr));
+                    }
+                    return ret;
+                }
+                public State Simulate()
+                {
+                    var nstate = new State(width, arr.Length);
+                    var narr = nstate.arr;
+
+                    for (int i = 0; i < arr.Length; i++)
+                    {
+                        var row = arr[i];
+                        var nrow = narr[i];
+                        var left = LShift(row);
+                        var right = RShift(row);
+                        for (int j = 0; j < row.Length; j++)
+                        {
+                            nrow[j] |= row[j] | left[j] | right[j];
+                        }
+                        if (i > 0)
+                        {
+                            var nup = narr[i - 1];
+                            for (int j = 0; j < row.Length; j++)
+                            {
+                                nup[j] |= row[j];
+                            }
+                        }
+                        if (i < arr.Length - 1)
+                        {
+                            var ndw = narr[i + 1];
+                            for (int j = 0; j < row.Length; j++)
+                            {
+                                ndw[j] |= row[j];
+                            }
+                        }
+                    }
+
+                    for (int i = 0; i < narr.Length; i++)
+                    {
+                        var row = narr[i];
+                        for (int w = 0; w < last; w++)
+                        {
+                            row[w] = ~row[w];
+                        }
+                        row[last] = (~row[last]) & topMask;
+                    }
+
+                    return nstate;
+                }
+                public ulong[] LShift(ulong[] arr)
+                {
+                    var narr = new ulong[arr.Length];
+                    for (int q = 0; q < last; q++)
+                    {
+                        var el = arr[q];
+                        narr[q + 1] = el >> 63;
+                        narr[q] |= el << 1;
+                    }
+                    narr[last] |= (arr[last] << 1) & topMask;
+                    return narr;
+                }
+                public ulong[] RShift(ulong[] arr)
+                {
+                    var narr = new ulong[arr.Length];
+                    narr[0] = arr[0] >> 1;
+                    for (int q = 1; q < arr.Length; q++)
+                    {
+                        var el = arr[q];
+                        narr[q - 1] |= el << 63;
+                        narr[q] = el >> 1;
+                    }
+                    return narr;
+                }
+                public bool Equal(State other)
+                {
+                    for (int i = 0; i < arr.Length; i++)
+                    {
+                        var row = arr[i];
+                        var orow = other.arr[i];
+                        for (int j = 0; j < row.Length; j++)
+                        {
+                            if (row[j] != orow[j]) return false;
+                        }
+                    }
+                    return true;
+                }
+    }
+}
+
+class Solution
+{
+    public static void Main(string[] args)
+    {
+        TextWriter textWriter = new StreamWriter(@System.Environment.GetEnvironmentVariable("OUTPUT_PATH"), true);
+
+        string[] firstMultipleInput = Console.ReadLine().TrimEnd().Split(' ');
+
+        int r = Convert.ToInt32(firstMultipleInput[0]);
+
+        int c = Convert.ToInt32(firstMultipleInput[1]);
+
+        int n = Convert.ToInt32(firstMultipleInput[2]);
+
+        List<string> grid = new List<string>();
+
+        for (int i = 0; i < r; i++)
+        {
+            string gridItem = Console.ReadLine();
+            grid.Add(gridItem);
+        }
+
+        List<string> result = Result.bomberMan(n, grid);
+
+        textWriter.WriteLine(String.Join("\n", result));
+
+        textWriter.Flush();
+        textWriter.Close();
+    }
+}
