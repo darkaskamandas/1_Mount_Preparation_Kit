@@ -1,0 +1,44 @@
+
+
+
+
+/* 
+The structure of the node is
+
+typedef struct node {
+
+    int freq;
+    char data;
+    node * left;
+    node * right;
+    
+} node;
+
+*/
+void func(node* top,node* root,string& s,int& index,string& res){
+    if(index >= (int)s.length()){
+        res += root->data;
+        return ;
+    }
+    if(!root->left && !root->right){
+        res += root->data;
+        func(top,top,s,index,res);
+    }
+    if(index<(int)s.length() && s[index] == '1'){
+        index++;
+        func(top,root->right,s,index,res);
+    }
+    else if(index< (int)s.length()){
+        index++;
+        func(top,root->left,s,index,res);
+    }
+}
+
+void decode_huff(node * root, string s) {
+    string res = "";
+    int n = s.length();
+    int index = 0;
+    func(root,root,s,index,res);
+    cout<<res<<endl;
+}
+
