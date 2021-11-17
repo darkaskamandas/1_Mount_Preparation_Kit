@@ -1,0 +1,93 @@
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.Collections;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
+using System.Text;
+using System;
+
+class Result
+{
+
+    /*
+     * Complete the 'icecreamParlor' function below.
+     *
+     * The function is expected to return an INTEGER_ARRAY.
+     * The function accepts following parameters:
+     *  1. INTEGER m
+     *  2. INTEGER_ARRAY arr
+     */
+
+    public static List<int> icecreamParlor(int m, List<int> arr)
+    {
+        var sorted=arr.ToArray();
+        Array.Sort(sorted);
+        var j=Array.BinarySearch(sorted, m);
+        if(j<0)j=-2-j;
+        else j=j-1;
+        int i=0;
+        while(true)
+        {
+            var sum=sorted[i]+sorted[j];
+            if(sum==m)
+            {
+                int q=0;
+                int a=sorted[i];
+                int b=sorted[j];
+                var ret=new List<int>(2);
+                while(true)
+                {
+                    var v=arr[q];
+                    if(v==a)
+                    {
+                        ret.Add(q+1);
+                        if(ret.Count==2)break;
+                    }
+                    else if(v==b)
+                    {
+                        ret.Add(q+1);
+                        if(ret.Count==2)break;
+                    }
+                    q++;
+                }
+                ret.Sort();
+                return ret;
+            }
+            if(sum<m)i++;
+            else j--;
+        }
+    }
+
+}
+
+class Solution
+{
+    public static void Main(string[] args)
+    {
+        TextWriter textWriter = new StreamWriter(@System.Environment.GetEnvironmentVariable("OUTPUT_PATH"), true);
+
+        int t = Convert.ToInt32(Console.ReadLine().Trim());
+
+        for (int tItr = 0; tItr < t; tItr++)
+        {
+            int m = Convert.ToInt32(Console.ReadLine().Trim());
+
+            int n = Convert.ToInt32(Console.ReadLine().Trim());
+
+            List<int> arr = Console.ReadLine().TrimEnd().Split(' ').ToList().Select(arrTemp => Convert.ToInt32(arrTemp)).ToList();
+
+            List<int> result = Result.icecreamParlor(m, arr);
+
+            textWriter.WriteLine(String.Join(" ", result));
+        }
+
+        textWriter.Flush();
+        textWriter.Close();
+    }
+}
