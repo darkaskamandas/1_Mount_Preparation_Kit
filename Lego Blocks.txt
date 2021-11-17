@@ -1,0 +1,121 @@
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.Collections;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
+using System.Text;
+using System.Numerics;
+using System;
+
+class Result
+{
+
+    /*
+     * Complete the 'legoBlocks' function below.
+     *
+     * The function is expected to return an INTEGER.
+     * The function accepts following parameters:
+     *  1. INTEGER n
+     *  2. INTEGER m
+     */
+
+    const long M = 1000000007;
+    static readonly BigInteger BIM = new BigInteger(M);
+
+    public static int legoBlocks(int n, int m)
+    {
+        var ob = new Result();
+        ob.Prepare(n, m);
+        var ret = ob.WaysToSetCorrectly(m);
+        return (int)(ret % M);
+    }
+
+    List<long> waysToSet;
+    List<long> waysToSetCorrectly;
+    List<long> waysToSet1Level;
+
+    void Prepare(int n, int m)
+    {
+        waysToSet1Level = new List<long>(m);
+        for (int i = 0; i <= m; i++)
+        {
+            waysToSet1Level.Add(WaysToSet1Level(i));
+        }
+
+        waysToSet = new List<long>(m);
+        var bin = new BigInteger(n);
+        for (int i = 0; i <= m; i++)
+        {
+            waysToSet.Add(WaysToSet(bin, i));
+        }
+        waysToSetCorrectly = new List<long>(m);
+        for (int i = 0; i < m; i++)
+        {
+            waysToSetCorrectly.Add(WaysToSetCorrectly(i));
+        }
+    }
+
+    long WaysToSetCorrectly(int m)
+    {
+        var ret = waysToSet[m];
+        for (int i = 1, j = m - 1; i < m; i++, j--)
+        {
+            var a = waysToSetCorrectly[i];
+            var c = waysToSet[j];
+            ret -= ((a % M) * (c % M)) % M;
+            if (ret < 0) ret += M;
+        }
+        return ret;
+    }
+    long WaysToSet(BigInteger n, int m)
+    {
+        var w1 = waysToSet1Level[m];
+        return (long)BigInteger.ModPow(w1, n, BIM);
+    }
+    long WaysToSet1Level(int m)
+    {
+        if (m < 5)
+        {
+            return 1 << (m - 1);
+        }
+        long ret = 0;
+        for (int i = 1; i < 5; i++)
+        {
+            ret += waysToSet1Level[m - i];
+        }
+        return ret % M;
+    }
+
+}
+
+class Solution
+{
+    public static void Main(string[] args)
+    {
+        TextWriter textWriter = new StreamWriter(@System.Environment.GetEnvironmentVariable("OUTPUT_PATH"), true);
+
+        int t = Convert.ToInt32(Console.ReadLine().Trim());
+
+        for (int tItr = 0; tItr < t; tItr++)
+        {
+            string[] firstMultipleInput = Console.ReadLine().TrimEnd().Split(' ');
+
+            int n = Convert.ToInt32(firstMultipleInput[0]);
+
+            int m = Convert.ToInt32(firstMultipleInput[1]);
+
+            int result = Result.legoBlocks(n, m);
+
+            textWriter.WriteLine(result);
+        }
+
+        textWriter.Flush();
+        textWriter.Close();
+    }
+}
