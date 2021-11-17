@@ -1,0 +1,127 @@
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.Collections;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
+using System.Text;
+using System;
+
+class Result
+{
+
+    /*
+     * Complete the 'roadsAndLibraries' function below.
+     *
+     * The function is expected to return a LONG_INTEGER.
+     * The function accepts following parameters:
+     *  1. INTEGER n
+     *  2. INTEGER c_lib
+     *  3. INTEGER c_road
+     *  4. 2D_INTEGER_ARRAY cities
+     */
+
+
+    public static long roadsAndLibraries(int n, int c_lib, int c_road, List<List<int>> cities)
+    {
+        if (c_lib <= c_road) return (long)n * c_lib;
+
+        var islandsN = new int[n + 1];
+        int newIslandN = 1;
+        var renumbered = new Dictionary<int, int>();
+        foreach (var conn in cities)
+        {
+            var A = conn[0];
+            var B = conn[1];
+            var iA = islandsN[A];
+            var iB = islandsN[B];
+            if (iA == 0)
+            {
+                if (iB == 0)
+                {
+                    renumbered.Add(newIslandN, newIslandN);
+                    islandsN[A] = newIslandN;
+                    islandsN[B] = newIslandN;
+                    newIslandN++;
+                }
+                else
+                {
+                    islandsN[A] = islandsN[B];
+                }
+            }
+            else
+            {
+                if (iB == 0)
+                {
+                    islandsN[B] = islandsN[A];
+                }
+                else
+                {
+                    int finA = iA;
+                    int finB = iB;
+                    while (renumbered[finA] != finA) finA = renumbered[finA];
+                    while (renumbered[finB] != finB) finB = renumbered[finB];
+                    renumbered[finB] = renumbered[finA];
+                }
+            }
+        }
+
+        var distinctIslands = new HashSet<int>();
+        foreach (var item in renumbered)
+        {
+            var v = item.Value;
+            while (renumbered[v] != v) v = renumbered[v];
+            distinctIslands.Add(v);
+        }
+        long islandsCount = distinctIslands.Count;
+        for (int i = 1; i <= n; i++)
+        {
+            if (islandsN[i] == 0) islandsCount++;
+        }
+
+        return islandsCount * c_lib + (n - islandsCount) * c_road;
+    }
+
+}
+
+class Solution
+{
+    public static void Main(string[] args)
+    {
+        TextWriter textWriter = new StreamWriter(@System.Environment.GetEnvironmentVariable("OUTPUT_PATH"), true);
+
+        int q = Convert.ToInt32(Console.ReadLine().Trim());
+
+        for (int qItr = 0; qItr < q; qItr++)
+        {
+            string[] firstMultipleInput = Console.ReadLine().TrimEnd().Split(' ');
+
+            int n = Convert.ToInt32(firstMultipleInput[0]);
+
+            int m = Convert.ToInt32(firstMultipleInput[1]);
+
+            int c_lib = Convert.ToInt32(firstMultipleInput[2]);
+
+            int c_road = Convert.ToInt32(firstMultipleInput[3]);
+
+            List<List<int>> cities = new List<List<int>>();
+
+            for (int i = 0; i < m; i++)
+            {
+                cities.Add(Console.ReadLine().TrimEnd().Split(' ').ToList().Select(citiesTemp => Convert.ToInt32(citiesTemp)).ToList());
+            }
+
+            long result = Result.roadsAndLibraries(n, c_lib, c_road, cities);
+
+            textWriter.WriteLine(result);
+        }
+
+        textWriter.Flush();
+        textWriter.Close();
+    }
+}
