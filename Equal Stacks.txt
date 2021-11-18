@@ -1,0 +1,98 @@
+using System.CodeDom.Compiler;
+using System.Collections.Generic;
+using System.Collections;
+using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
+using System.Text;
+using System;
+
+class Result
+{
+
+    /*
+     * Complete the 'equalStacks' function below.
+     *
+     * The function is expected to return an INTEGER.
+     * The function accepts following parameters:
+     *  1. INTEGER_ARRAY h1
+     *  2. INTEGER_ARRAY h2
+     *  3. INTEGER_ARRAY h3
+     */
+
+    public static int equalStacks(List<int> h1, List<int> h2, List<int> h3)
+    {
+        int H1=Sum(h1);
+        int H2=Sum(h2);
+        int H3=Sum(h3);
+        int i1=0;
+        int i2=0;
+        int i3=0;
+        while(H1!=H2 || H2!=H3)
+        {
+            if(H1>H2)
+            {
+                if(H1>H3)
+                {
+                    H1-=h1[i1++];
+                }
+                else
+                {
+                    H3-=h3[i3++];
+                }
+            }
+            else
+            {
+                if(H2>H3)
+                {
+                    H2-=h2[i2++];
+                }
+                else
+                {
+                    H3-=h3[i3++];
+                }
+            }
+        }
+        return H1;
+    }
+    static int Sum(List<int> list)
+    {
+        var ret=0;
+        for(int i=0;i<list.Count;i++)ret+=list[i];
+        return ret;
+    }
+}
+
+class Solution
+{
+    public static void Main(string[] args)
+    {
+        TextWriter textWriter = new StreamWriter(@System.Environment.GetEnvironmentVariable("OUTPUT_PATH"), true);
+
+        string[] firstMultipleInput = Console.ReadLine().TrimEnd().Split(' ');
+
+        int n1 = Convert.ToInt32(firstMultipleInput[0]);
+
+        int n2 = Convert.ToInt32(firstMultipleInput[1]);
+
+        int n3 = Convert.ToInt32(firstMultipleInput[2]);
+
+        List<int> h1 = Console.ReadLine().TrimEnd().Split(' ').ToList().Select(h1Temp => Convert.ToInt32(h1Temp)).ToList();
+
+        List<int> h2 = Console.ReadLine().TrimEnd().Split(' ').ToList().Select(h2Temp => Convert.ToInt32(h2Temp)).ToList();
+
+        List<int> h3 = Console.ReadLine().TrimEnd().Split(' ').ToList().Select(h3Temp => Convert.ToInt32(h3Temp)).ToList();
+
+        int result = Result.equalStacks(h1, h2, h3);
+
+        textWriter.WriteLine(result);
+
+        textWriter.Flush();
+        textWriter.Close();
+    }
+}
